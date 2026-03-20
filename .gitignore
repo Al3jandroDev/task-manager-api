@@ -5,3 +5,6 @@ __pycache__/
 
 # Ignorar entornos virtuales
 venv/
+
+# Ignorar archivos de configuración y secretos
+.env
