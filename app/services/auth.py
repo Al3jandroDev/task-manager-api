@@ -7,6 +7,52 @@ from passlib.context import CryptContext  # passlib for password hashing
 from dotenv import load_dotenv
 import os
 
+#authorize
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, HTTPException, status
+
+
+from sqlmodel import Session
+
+from app.services.user import get_user_by_username
+
+
+from app.db.database import get_session
+
+security = HTTPBearer(auto_error=True)
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    session: Session = Depends(get_session)
+):
+    token = credentials.credentials
+
+    try:
+        payload = decode_access_token(token)
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token"
+        )
+
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload"
+        )
+
+    user = get_user_by_username(session, username)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found"
+        )
+
+    return user
+
 # Load environment variables from the .env file (if present)
 load_dotenv()
 
