@@ -1,17 +1,18 @@
 from sqlmodel import Session, SQLModel, create_engine, select
 from app.models.user import User
+import os
 
-# SQLite database file name
-sqlite_file_name = "database.db"
+# Read the database URL from environment variables
+# This allows switching between local and production databases without changing code
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Database connection URL (SQLite in this case)
-sqlite_url = f"sqlite:///{sqlite_file_name}"
+# Raise an error if the environment variable is missing
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL is not set")
 
-# Required for SQLite to allow usage across multiple threads (FastAPI uses async behavior)
-connect_args = {"check_same_thread": False}
-
-# Create the database engine (entry point to interact with the database)
-engine = create_engine(sqlite_url, connect_args=connect_args)
+# Create the SQLAlchemy/SQLModel engine
+# PostgreSQL does not require 'check_same_thread' like SQLite
+engine = create_engine(DATABASE_URL)
 
 def create_db_and_tables():
     """
